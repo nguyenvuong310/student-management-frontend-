@@ -20,4 +20,4 @@ spec:
             - containerPort: 5173
           env:
             - name: REACT_APP_BACKEND_API_URL
-              value: "http://{{ .Release.Name }}--api.{{ .Values.namespace }}.svc.cluster.local:3000/api"
+              value: "{{ .Values.env.REACT_APP_BACKEND_API_URL }}"
