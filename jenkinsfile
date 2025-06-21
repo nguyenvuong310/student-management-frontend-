@@ -6,7 +6,7 @@ pipeline {
     CONFIG_REPO = "https://github.com/nguyenvuong310/config-web.git"
     GIT_USER = "nguyenvuong310"
     GIT_EMAIL = "trungvuong2169@gmail.com"
-    G_TOKEN = credentials('G_TOKEN') // Define this in Jenkins credentials
+    G_TOKEN = credentials('G_TOKEN') 
     DOCKER_USERNAME = "vuong676"
     DOCKER_PASSWORD = credentials('DOCKERHUB_ACCESS_TOKEN') // Define as secret text
   }
