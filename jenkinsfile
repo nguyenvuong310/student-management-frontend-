@@ -8,6 +8,14 @@ apiVersion: v1
 kind: Pod
 spec:
   containers:
+    - name: shell
+      image: alpine/git
+      command: [sleep]
+      args: ["999999"]
+      volumeMounts:
+        - name: workspace-volume
+          mountPath: /home/jenkins/agent
+
     - name: kaniko
       image: gcr.io/kaniko-project/executor:debug
       imagePullPolicy: Always
@@ -18,6 +26,7 @@ spec:
           mountPath: /home/jenkins/agent
         - name: docker-config
           mountPath: /kaniko/.docker/
+
   volumes:
     - name: workspace-volume
       emptyDir: {}
@@ -37,7 +46,7 @@ spec:
   }
 
   parameters {
-    string(name: 'TAG_NAME', defaultValue: '', description: 'Tag name (e.g. v1.0.0)')
+    string(name: 'TAG_NAME', defaultValue: '', description: 'Tag name (e.g. 1.0)')
   }
 
   stages {
@@ -67,7 +76,7 @@ spec:
             sh """
               /kaniko/executor \
                 --context `pwd` \
-                --dockerfile `pwd`/dockerfile \
+                --dockerfile `pwd`/Dockerfile \
                 --destination=${fullTag}
             """
           }
@@ -77,35 +86,40 @@ spec:
 
     stage('3. Checkout Config Repo') {
       steps {
-        dir('config-repo') {
-          git url: "https://github.com/nguyenvuong310/config-web.git",
-              branch: "main",
-              credentialsId: "${G_TOKEN}"
+        container('shell') {
+          dir('config-repo') {
+            git url: "https://github.com/nguyenvuong310/config-web.git",
+                branch: "main",
+                credentialsId: 'github-token-write'
+          }
         }
       }
     }
 
     stage('4. Update Image Tag in values.yaml') {
       steps {
-        dir('config-repo') {
-          sh """
-            cd config-web
-            sed -i 's/^ *tag:.*/  tag: ${TAG_NAME}/g' values.yaml
-          """
+        container('shell') {
+          dir('config-repo') {
+            sh """
+              sed -i 's/^ *tag:.*/  tag: ${TAG_NAME}/g' values.yaml
+            """
+          }
         }
       }
     }
 
     stage('5. Commit and Push Changes') {
       steps {
-        dir('config-repo') {
-          sh """
-            git config user.name "nguyenvuong310"
-            git config user.email "vuong.nguyentrung310@gmail.com"
-            git add values.yaml
-            git commit -m "Update image tag to ${TAG_NAME}" || echo "Nothing to commit"
-            git push https://${G_TOKEN}@github.com/nguyenvuong310/config-web.git HEAD:main
-          """
+        container('shell') {
+          dir('config-repo') {
+            sh """
+              git config user.name "nguyenvuong310"
+              git config user.email "vuong.nguyentrung310@gmail.com"
+              git add values.yaml
+              git commit -m "Update image tag to ${TAG_NAME}" || echo "Nothing to commit"
+              git push https://${G_TOKEN}@github.com/nguyenvuong310/config-web.git HEAD:main
+            """
+          }
         }
       }
     }
