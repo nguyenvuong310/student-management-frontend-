@@ -1,6 +1,7 @@
 pipeline {
   agent {
     kubernetes {
+        cloud 'test-k8s-cloud'
       defaultContainer 'kaniko'
       yaml """
 apiVersion: v1
