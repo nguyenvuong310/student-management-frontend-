@@ -114,11 +114,14 @@ spec:
       steps {
         container('shell') {
           dir('config-repo') {
-            sh """
-              git add values.yaml
-              git commit -m "Update image tag to ${TAG_NAME}" || echo "Nothing to commit"
-              git push https://${G_TOKEN}@github.com/nguyenvuong310/config-web.git HEAD:main
-            """
+            withEnv(["GITHUB_TOKEN=${G_TOKEN}"]) {
+  sh '''
+    git config --global --add safe.directory $(pwd)
+    git add values.yaml
+    git commit -m "Update image tag to $TAG_NAME" || echo "Nothing to commit"
+    git push https://$GITHUB_TOKEN@github.com/nguyenvuong310/config-web.git HEAD:main
+  '''
+}
           }
         }
       }
