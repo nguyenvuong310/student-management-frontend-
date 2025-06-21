@@ -80,7 +80,7 @@ spec:
         dir('config-repo') {
           git url: "https://github.com/nguyenvuong310/config-web.git",
               branch: "main",
-              credentialsId: 'github-token-write'
+              credentialsId: ${G_TOKEN}
         }
       }
     }
@@ -89,6 +89,7 @@ spec:
       steps {
         dir('config-repo') {
           sh """
+            ls -la
             sed -i 's/^ *tag:.*/  tag: ${TAG_NAME}/g' values.yaml
           """
         }
