@@ -50,39 +50,39 @@ spec:
   }
 
   stages {
-    stage('1. Checkout Source Code') {
-      steps {
-        container('kaniko') {
-          git(
-            url: 'https://github.com/nguyenvuong310/student-management-frontend-.git',
-            branch: 'main',
-            credentialsId: 'github-cred'
-          )
-          echo "✅ Checkout thành công."
-          sh "ls -la"
-        }
-      }
-    }
+    // stage('1. Checkout Source Code') {
+    //   steps {
+    //     container('kaniko') {
+    //       git(
+    //         url: 'https://github.com/nguyenvuong310/student-management-frontend-.git',
+    //         branch: 'main',
+    //         credentialsId: 'github-cred'
+    //       )
+    //       echo "✅ Checkout thành công."
+    //       sh "ls -la"
+    //     }
+    //   }
+    // }
 
-    stage('2. Build & Push with Kaniko') {
-      when {
-        expression { return params.TAG_NAME?.trim() }
-      }
-      steps {
-        container('kaniko') {
-          script {
-            def fullTag = "${DOCKER_IMAGE_NAME}:${TAG_NAME}"
-            echo "🚀 Building and pushing image: ${fullTag}"
-            sh """
-              /kaniko/executor \
-                --context `pwd` \
-                --dockerfile `pwd`/dockerfile \
-                --destination=${fullTag}
-            """
-          }
-        }
-      }
-    }
+    // stage('2. Build & Push with Kaniko') {
+    //   when {
+    //     expression { return params.TAG_NAME?.trim() }
+    //   }
+    //   steps {
+    //     container('kaniko') {
+    //       script {
+    //         def fullTag = "${DOCKER_IMAGE_NAME}:${TAG_NAME}"
+    //         echo "🚀 Building and pushing image: ${fullTag}"
+    //         sh """
+    //           /kaniko/executor \
+    //             --context `pwd` \
+    //             --dockerfile `pwd`/dockerfile \
+    //             --destination=${fullTag}
+    //         """
+    //       }
+    //     }
+    //   }
+    // }
 
     stage('3. Checkout Config Repo') {
       steps {
