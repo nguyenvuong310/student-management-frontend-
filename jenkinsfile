@@ -76,7 +76,7 @@ spec:
             sh """
               /kaniko/executor \
                 --context `pwd` \
-                --dockerfile `pwd`/Dockerfile \
+                --dockerfile `pwd`/dockerfile \
                 --destination=${fullTag}
             """
           }
