@@ -15,14 +15,7 @@ spec:
       volumeMounts:
         - name: workspace-volume
           mountPath: /home/jenkins/agent
-    
-    - name: jnlp
-    image: jenkins/inbound-agent:alpine-jdk11
-    args: ['\$(JENKINS_SECRET)', '\$(JENKINS_NAME)']
-    workingDir: /home/jenkins/agent
-    volumeMounts:
-    - name: workspace-volume
-      mountPath: /home/jenkins/agent
+          
 
     - name: kaniko
       image: gcr.io/kaniko-project/executor:debug
@@ -119,7 +112,7 @@ spec:
 
     stage('5. Commit and Push Changes') {
       steps {
-        container('jnlp') {
+        container('shell') {
           dir('config-repo') {
             sh """
               git add values.yaml
