@@ -80,7 +80,7 @@ spec:
         dir('config-repo') {
           git url: "https://github.com/nguyenvuong310/config-web.git",
               branch: "main",
-              credentialsId: ${G_TOKEN}
+              credentialsId: "${G_TOKEN}"
         }
       }
     }
