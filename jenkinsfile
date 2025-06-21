@@ -89,7 +89,7 @@ spec:
       steps {
         dir('config-repo') {
           sh """
-            ls -la
+            cd config-web
             sed -i 's/^ *tag:.*/  tag: ${TAG_NAME}/g' values.yaml
           """
         }
