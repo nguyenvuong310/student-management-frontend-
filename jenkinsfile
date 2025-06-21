@@ -1,40 +1,37 @@
 pipeline {
-    agent {
+  agent {
     kubernetes {
+      defaultContainer 'kaniko'
       yaml """
 apiVersion: v1
 kind: Pod
 spec:
   containers:
-  - name: kaniko
-    image: gcr.io/kaniko-project/executor:latest
-    command:
-    - cat
-    tty: true
-    volumeMounts:
-    - name: kaniko-secret
-      mountPath: /kaniko/.docker
+    - name: kaniko
+      image: gcr.io/kaniko-project/executor:debug
+      imagePullPolicy: Always
+      command: [sleep]
+      args: ["999999"]
+      volumeMounts:
+        - name: workspace-volume
+          mountPath: /home/jenkins/agent
+        - name: docker-config
+          mountPath: /kaniko/.docker/
   volumes:
-  - name: kaniko-secret
-    secret:
-      secretName: regcred # Docker Registry Secret
+    - name: workspace-volume
+      emptyDir: {}
+    - name: docker-config
+      secret:
+        secretName: dockerhub-credentials
+        items:
+          - key: .dockerconfigjson
+            path: config.json
 """
-      defaultContainer 'kaniko'
     }
   }
 
   environment {
-    DOCKER_IMAGE = "vuong676/listvdt-frontend-web"
-    CONFIG_REPO = "https://github.com/nguyenvuong310/config-web.git"
-    GIT_USER = "nguyenvuong310"
-    GIT_EMAIL = "trungvuong2169@gmail.com"
-    G_TOKEN = credentials('G_TOKEN') 
-    DOCKER_USERNAME = "vuong676"
-    DOCKER_PASSWORD = credentials('DOCKERHUB_ACCESS_TOKEN') // Define as secret text
-  }
-
-  options {
-    skipDefaultCheckout(true)
+    DOCKER_IMAGE_NAME = 'vuong676/listvdt-frontend-web'
   }
 
   parameters {
@@ -44,52 +41,37 @@ spec:
   stages {
     stage('Checkout Source') {
       steps {
-        checkout scm
-      }
-    }
-
-    stage('Login to Docker Hub') {
-      steps {
-        script {
-          sh """
-            echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
-          """
+        container('kaniko') {
+          checkout scm
         }
       }
     }
 
-    stage('Build and Push Docker Image') {
+    stage('Build & Push with Kaniko') {
       when {
-        expression { return params.TAG_NAME != '' }
+        expression { return params.TAG_NAME?.trim() }
       }
       steps {
-        sh """
-          docker build -t ${DOCKER_IMAGE}:${TAG_NAME} .
-          docker push ${DOCKER_IMAGE}:${TAG_NAME}
-        """
-      }
-    }
-
-    stage('Update Config Repo') {
-      when {
-        expression { return params.TAG_NAME != '' }
-      }
-      steps {
-        dir('config-repo') {
-          git url: CONFIG_REPO, branch: 'main', credentialsId: 'G_TOKEN'
-
+        container('kaniko') {
           script {
+            def fullTag = "${DOCKER_IMAGE_NAME}:${TAG_NAME}"
+            echo "Building and pushing image: ${fullTag}"
             sh """
-              sed -i 's/^ *tag:.*/  tag: ${TAG_NAME}/' values.yaml
-              git config --global user.name "${GIT_USER}"
-              git config --global user.email "${GIT_EMAIL}"
-              git add values.yaml
-              git commit -m "Update image tag to ${TAG_NAME}" || echo "No changes to commit"
-              git push https://${G_TOKEN}@github.com/nguyenvuong310/config-web.git HEAD:main
+              /kaniko/executor \
+                --context `pwd` \
+                --dockerfile `pwd`/Dockerfile \
+                --destination=${fullTag}
             """
           }
         }
       }
+    }
+  }
+
+  post {
+    always {
+      echo 'Pipeline đã kết thúc.'
+      cleanWs()
     }
   }
 }
