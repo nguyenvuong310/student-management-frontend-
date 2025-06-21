@@ -33,6 +33,7 @@ spec:
 
   environment {
     DOCKER_IMAGE_NAME = 'vuong676/listvdt-frontend-web'
+    G_TOKEN = credentials('github-token-write')
   }
 
   parameters {
@@ -40,7 +41,7 @@ spec:
   }
 
   stages {
-    stage('1. Checkout Code') {
+    stage('1. Checkout Source Code') {
       steps {
         container('kaniko') {
           git(
@@ -49,7 +50,7 @@ spec:
             credentialsId: 'github-cred'
           )
           echo "✅ Checkout thành công."
-          sh "ls -la" // kiểm tra thư mục clone
+          sh "ls -la"
         }
       }
     }
@@ -66,10 +67,44 @@ spec:
             sh """
               /kaniko/executor \
                 --context `pwd` \
-                --dockerfile `pwd`/dockerfile \
+                --dockerfile `pwd`/Dockerfile \
                 --destination=${fullTag}
             """
           }
+        }
+      }
+    }
+
+    stage('3. Checkout Config Repo') {
+      steps {
+        dir('config-repo') {
+          git url: "https://github.com/nguyenvuong310/config-web.git",
+              branch: "main",
+              credentialsId: 'github-token-write'
+        }
+      }
+    }
+
+    stage('4. Update Image Tag in values.yaml') {
+      steps {
+        dir('config-repo') {
+          sh """
+            sed -i 's/^ *tag:.*/  tag: ${TAG_NAME}/g' values.yaml
+          """
+        }
+      }
+    }
+
+    stage('5. Commit and Push Changes') {
+      steps {
+        dir('config-repo') {
+          sh """
+            git config user.name "nguyenvuong310"
+            git config user.email "vuong.nguyentrung310@gmail.com"
+            git add values.yaml
+            git commit -m "Update image tag to ${TAG_NAME}" || echo "Nothing to commit"
+            git push https://${G_TOKEN}@github.com/nguyenvuong310/config-web.git HEAD:main
+          """
         }
       }
     }
