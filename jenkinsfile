@@ -1,7 +1,7 @@
 pipeline {
   agent {
     kubernetes {
-        cloud 'test-k8s-cloud'
+      cloud 'test-k8s-cloud'
       defaultContainer 'kaniko'
       yaml """
 apiVersion: v1
@@ -40,15 +40,21 @@ spec:
   }
 
   stages {
-    stage('Checkout Source') {
+    stage('1. Checkout Code') {
       steps {
         container('kaniko') {
-          checkout scm
+          git(
+            url: 'https://github.com/nguyenvuong310/student-management-frontend-.git',
+            branch: 'main',
+            credentialsId: 'github-cred'
+          )
+          echo "✅ Checkout thành công."
+          sh "ls -la" // kiểm tra thư mục clone
         }
       }
     }
 
-    stage('Build & Push with Kaniko') {
+    stage('2. Build & Push with Kaniko') {
       when {
         expression { return params.TAG_NAME?.trim() }
       }
@@ -56,7 +62,7 @@ spec:
         container('kaniko') {
           script {
             def fullTag = "${DOCKER_IMAGE_NAME}:${TAG_NAME}"
-            echo "Building and pushing image: ${fullTag}"
+            echo "🚀 Building and pushing image: ${fullTag}"
             sh """
               /kaniko/executor \
                 --context `pwd` \
@@ -71,7 +77,7 @@ spec:
 
   post {
     always {
-      echo 'Pipeline đã kết thúc.'
+      echo '🧹 Pipeline đã kết thúc.'
       cleanWs()
     }
   }
