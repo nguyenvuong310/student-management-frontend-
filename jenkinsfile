@@ -114,7 +114,6 @@ spec:
         container('shell') {
           dir('config-repo') {
             sh """
-            cd config-web
               git config user.name "nguyenvuong310"
               git config user.email "vuong.nguyentrung310@gmail.com"
               git add values.yaml
