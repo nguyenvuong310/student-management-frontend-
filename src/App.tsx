@@ -82,6 +82,7 @@ const App: React.FC = () => {
       <h1 style={{ textAlign: "center" }}>
         Danh sách sinh viên mảng <b>Cloud</b>
       </h1>
+      <span style={{ textAlign: "center" }}>21/06/2025</span>
       <SimpleTable columnDefs={columnDefs} data={data} />
     </div>
   );
