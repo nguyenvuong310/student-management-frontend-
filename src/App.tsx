@@ -77,6 +77,9 @@ const App: React.FC = () => {
   return (
     <div className="container">
       <h1 style={{ textAlign: "center" }}>
+        <b>Viettel Digital talent 2025</b>
+      </h1>
+      <h1 style={{ textAlign: "center" }}>
         Danh sách sinh viên mảng <b>Cloud</b>
       </h1>
       <SimpleTable columnDefs={columnDefs} data={data} />
