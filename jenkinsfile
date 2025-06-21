@@ -15,6 +15,14 @@ spec:
       volumeMounts:
         - name: workspace-volume
           mountPath: /home/jenkins/agent
+    
+    - name: jnlp
+    image: jenkins/inbound-agent:alpine-jdk11
+    args: ['\$(JENKINS_SECRET)', '\$(JENKINS_NAME)']
+    workingDir: /home/jenkins/agent
+    volumeMounts:
+    - name: workspace-volume
+      mountPath: /home/jenkins/agent
 
     - name: kaniko
       image: gcr.io/kaniko-project/executor:debug
@@ -111,12 +119,9 @@ spec:
 
     stage('5. Commit and Push Changes') {
       steps {
-        container('shell') {
+        container('jnlp') {
           dir('config-repo') {
             sh """
-              pwd && ls -la
-              git config user.name "nguyenvuong310"
-              git config user.email "vuong.nguyentrung310@gmail.com"
               git add values.yaml
               git commit -m "Update image tag to ${TAG_NAME}" || echo "Nothing to commit"
               git push https://${G_TOKEN}@github.com/nguyenvuong310/config-web.git HEAD:main
